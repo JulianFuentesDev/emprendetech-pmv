@@ -1,0 +1,42 @@
+{
+  "name": "emprendetech-pmv",
+  "version": "0.1.0",
+  "private": true,
+  "description": "PMV de EmprendeTech: monolito en capas con Next.js (Reto 4 - Arquitectura de Software)",
+  "scripts": {
+    "dev": "next dev",
+    "build": "prisma generate && next build",
+    "start": "next start",
+    "lint": "next lint",
+    "postinstall": "prisma generate",
+    "db:push": "prisma db push",
+    "db:seed": "prisma db seed"
+  },
+  "dependencies": {
+    "@prisma/client": "7.10.1",
+    "bcryptjs": "2.4.3",
+    "next": "14.2.35",
+    "next-auth": "4.24.15",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "zod": "3.23.8",
+    "@prisma/adapter-pg": "7.10.1",
+    "pg": "8.16.3",
+    "dotenv": "16.4.7"
+  },
+  "devDependencies": {
+    "@types/bcryptjs": "2.4.6",
+    "@types/node": "20.17.6",
+    "@types/react": "18.3.12",
+    "@types/react-dom": "18.3.1",
+    "eslint": "8.57.1",
+    "eslint-config-next": "14.2.35",
+    "prisma": "7.10.1",
+    "tsx": "4.19.2",
+    "typescript": "5.6.3",
+    "@types/pg": "8.15.4"
+  },
+  "engines": {
+    "node": ">=20.19"
+  }
+}

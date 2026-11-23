@@ -1,0 +1,167 @@
+// Modelo de datos de EmprendeTech (ver Diagramas 15 y 16 del SAD)
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Rol {
+  EMPRENDEDOR
+  COMPRADOR
+  ADMIN
+}
+
+enum EstadoPedido {
+  PENDIENTE
+  PAGADO
+  ENVIADO
+  ENTREGADO
+}
+
+enum EstadoPago {
+  PENDIENTE
+  APROBADO
+  RECHAZADO
+}
+
+enum MedioPago {
+  NEQUI
+  DAVIPLATA
+  TARJETA
+  CONTRAENTREGA
+}
+
+model Usuario {
+  id           String   @id @default(uuid()) @db.Uuid
+  nombre       String   @db.VarChar(120)
+  email        String   @unique @db.VarChar(160)
+  passwordHash String   @map("password_hash") @db.VarChar(100)
+  rol          Rol
+  creadoEn     DateTime @default(now()) @map("creado_en")
+  tienda       Tienda?
+  pedidos      Pedido[]
+  resenas      Resena[]
+
+  @@map("usuario")
+}
+
+model Localidad {
+  id       Int      @id @default(autoincrement())
+  nombre   String   @unique @db.VarChar(60)
+  tiendas  Tienda[]
+  pedidos  Pedido[]
+
+  @@map("localidad")
+}
+
+model Categoria {
+  id        Int        @id @default(autoincrement())
+  nombre    String     @unique @db.VarChar(60)
+  productos Producto[]
+
+  @@map("categoria")
+}
+
+model Tienda {
+  id            String     @id @default(uuid()) @db.Uuid
+  emprendedorId String     @unique @map("emprendedor_id") @db.Uuid
+  localidadId   Int        @map("localidad_id")
+  nombre        String     @db.VarChar(120)
+  descripcion   String?
+  creadoEn      DateTime   @default(now()) @map("creado_en")
+  emprendedor   Usuario    @relation(fields: [emprendedorId], references: [id])
+  localidad     Localidad  @relation(fields: [localidadId], references: [id])
+  productos     Producto[]
+  pedidos       Pedido[]
+
+  @@index([localidadId])
+  @@map("tienda")
+}
+
+model Producto {
+  id          String        @id @default(uuid()) @db.Uuid
+  tiendaId    String        @map("tienda_id") @db.Uuid
+  categoriaId Int           @map("categoria_id")
+  nombre      String        @db.VarChar(120)
+  descripcion String?
+  precio      Int
+  stock       Int
+  imagenUrl   String?       @map("imagen_url") @db.VarChar(300)
+  activo      Boolean       @default(true)
+  creadoEn    DateTime      @default(now()) @map("creado_en")
+  tienda      Tienda        @relation(fields: [tiendaId], references: [id])
+  categoria   Categoria     @relation(fields: [categoriaId], references: [id])
+  lineas      LineaPedido[]
+  resenas     Resena[]
+
+  @@index([categoriaId, precio])
+  @@index([tiendaId])
+  @@map("producto")
+}
+
+model Pedido {
+  id                 String        @id @default(uuid()) @db.Uuid
+  compradorId        String        @map("comprador_id") @db.Uuid
+  tiendaId           String        @map("tienda_id") @db.Uuid
+  localidadEntregaId Int           @map("localidad_entrega_id")
+  direccion          String        @db.VarChar(200)
+  estado             EstadoPedido  @default(PENDIENTE)
+  medioPago          MedioPago     @map("medio_pago")
+  total              Int
+  creadoEn           DateTime      @default(now()) @map("creado_en")
+  comprador          Usuario       @relation(fields: [compradorId], references: [id])
+  tienda             Tienda        @relation(fields: [tiendaId], references: [id])
+  localidadEntrega   Localidad     @relation(fields: [localidadEntregaId], references: [id])
+  lineas             LineaPedido[]
+  pagos              Pago[]
+
+  @@index([tiendaId, creadoEn])
+  @@index([compradorId])
+  @@map("pedido")
+}
+
+model LineaPedido {
+  id             String   @id @default(uuid()) @db.Uuid
+  pedidoId       String   @map("pedido_id") @db.Uuid
+  productoId     String   @map("producto_id") @db.Uuid
+  cantidad       Int
+  precioUnitario Int      @map("precio_unitario")
+  pedido         Pedido   @relation(fields: [pedidoId], references: [id])
+  producto       Producto @relation(fields: [productoId], references: [id])
+
+  @@map("linea_pedido")
+}
+
+model Pago {
+  id                String     @id @default(uuid()) @db.Uuid
+  pedidoId          String     @map("pedido_id") @db.Uuid
+  medio             MedioPago
+  estado            EstadoPago @default(PENDIENTE)
+  monto             Int
+  referenciaExterna String     @unique @map("referencia_externa") @db.VarChar(80)
+  creadoEn          DateTime   @default(now()) @map("creado_en")
+  actualizadoEn     DateTime   @updatedAt @map("actualizado_en")
+  pedido            Pedido     @relation(fields: [pedidoId], references: [id])
+
+  @@map("pago")
+}
+
+// Reseñas: diseñadas en el SAD, fuera del alcance funcional del PMV (RF7).
+model Resena {
+  id           String   @id @default(uuid()) @db.Uuid
+  productoId   String   @map("producto_id") @db.Uuid
+  compradorId  String   @map("comprador_id") @db.Uuid
+  calificacion Int      @db.SmallInt
+  comentario   String?
+  oculta       Boolean  @default(false)
+  creadoEn     DateTime @default(now()) @map("creado_en")
+  producto     Producto @relation(fields: [productoId], references: [id])
+  comprador    Usuario  @relation(fields: [compradorId], references: [id])
+
+  @@unique([productoId, compradorId])
+  @@index([productoId])
+  @@map("resena")
+}
