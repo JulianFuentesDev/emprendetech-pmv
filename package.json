@@ -5,7 +5,7 @@
   "description": "PMV de EmprendeTech: monolito en capas con Next.js (Reto 4 - Arquitectura de Software)",
   "scripts": {
     "dev": "next dev",
-    "build": "prisma generate && next build",
+    "build": "prisma generate && prisma db push && prisma db seed && next build",
     "start": "next start",
     "lint": "next lint",
     "postinstall": "prisma generate",
